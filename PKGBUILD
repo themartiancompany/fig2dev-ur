@@ -79,12 +79,17 @@ if [[ ! -v "_evmfs" ]]; then
     _evmfs="false"
   fi
 fi
-pkgbase=fig2dev
+if [[ ! -v "_transfig" ]]; then
+  # See https://sourceforge.net/p/mcj/discussion/general/thread/4bae083308
+  _transfig="false"
+fi
+_pkg=fig2dev
+pkgbase="${_pkg}"
 pkgname=(
-  "fig2dev"
+  "${pkgbase}"
 )
-pkgver=3.2.9
-pkgrel=3
+pkgver=3.2.9a
+pkgrel=1
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -118,77 +123,103 @@ if [[ "${_os}" == "Msys" ]]; then
   makedepends+=(
   )
 fi
-conflicts=(
-  'transfig'
-)
-replaces=(
-  'transfig'
-)
-provides=(
-  'transfig'
-)
+if [[ "${_transfig}" == "true" ]]; then
+  conflicts=(
+    'transfig'
+  )
+  replaces=(
+    'transfig'
+  )
+  provides=(
+    'transfig'
+  )
+fi
+_tag="${pkgver}"
+_tarname="${_pkg}-${_tag}"
 source=(
-  "https://downloads.sourceforge.net/mcj/${pkgname}-${pkgver}.tar.xz"
-  $pkgname-3.2.9-remove_broken_tests.patch
+  "https://downloads.sourceforge.net/mcj/${_tarname}.tar.xz"
+  # "${_pkg}-3.2.9-remove_broken_tests.patch"
 )
+_3_2_9_sum='15e246c8d13cc72de25e08314038ad50ce7d2defa9cf1afc172fd7f5932090b1'
+_sum="61e185393176852f03b901b3b05b19fbc5ad8258ff142f3da6e70b1b83513326"
+_sig_sum="bdf8bb3460e9150a9ca0449f729052b279a3abfccfa53f61ad838fe48da7d876"
 sha256sums=(
-  '15e246c8d13cc72de25e08314038ad50ce7d2defa9cf1afc172fd7f5932090b1'
-  '32e1fe1d99c76db7d49cb46245442cdf0fce693c3ebcde7b47913ebafb0c72fa'
+  "${_sum}"
+  # '32e1fe1d99c76db7d49cb46245442cdf0fce693c3ebcde7b47913ebafb0c72fa'
+)
+validpgpkeys=(
+  # Truocolo
+  #   <truocolo@aol.com>
+  '97E989E6CF1D2C7F7A41FF9F95684DBE23D6A3E9'
+  #   <truocolo@0x6E5163fC4BFc1511Dbe06bB605cc14a3e462332b>
+  'F690CBC17BD1F53557290AF51FC17D540D0ADEED'
+  # Pellegrino Prevete (dvorak)
+  #   <dvorak@0x87003Bd6C074C713783df04f36517451fF34CBEf>
+  '12D8E3D7888F741E89F86EE0FEC8567A644F1D16'
 )
 
 prepare() {
   # remove broken tests:
   # https://sourceforge.net/p/mcj/tickets/171/
-  patch \
-    -Np1 \
-    -d \
-      "${pkgname}-${pkgver}" \
-    -i \
-    "../${pkgname}-3.2.9-remove_broken_tests.patch"
+  # patch \
+  #   -Np1 \
+  #   -d \
+  #     "${_tarname}" \
+  #   -i \
+  #   "../${_tarname}-remove_broken_tests.patch"
   # delete pre-generated test script
   rm \
     -v \
-    "${pkgname}-${pkgver}/${pkgname}/tests/testsuite"
+    "${_tarname}/${_pkg}/tests/testsuite"
   # extract license file from sources
   sed \
     -n \
     '1,17p' \
-    "${pkgname}-${pkgver}/${pkgname}/alloc.h" > \
+    "${_tarname}/${_pkg}/alloc.h" > \
     "Xfig.txt"
   cd \
-    "${pkgname}-${pkgver}"
+    "${_tarname}"
   autoreconf \
     -fiv
 }
 
 build() {
+  local \
+    _configure_opts=()
+  _configure_opts+=(
+    --prefix="/usr"
+  )
+  if [[ "${_transfig}" == "true" ]]; then
+    _configure_opts+=(
+      --enable-transfig
+    )
+  fi
   cd \
-    "${pkgname}-${pkgver}"
+    "${_tarname}"
   "./configure" \
-    --prefix="/usr" \
-    --enable-transfig
+    "${_configure_opts[@]}"
   make
 }
 
 check() {
   cd \
-    "${pkgname}-${pkgver}"
+    "${_tarname}"
   make \
     check
 }
 
 package() {
   cd \
-    "${pkgname}-${pkgver}"
+    "${_tarname}"
   make \
     DESTDIR="${pkgdir}" \
     XFIGLIBDIR="/usr/share/xfig" \
-    FIG2DEV_LIBDIR="/usr/share/fig2dev" \
+    FIG2DEV_LIBDIR="/usr/share/${_pkg}" \
     MANPATH="/usr/share/man" \
     install
   install \
     -vDm644 \
     "../Xfig.txt" \
     -t \
-    "${pkgdir}/usr/share/licenses/${pkgname}/"
+    "${pkgdir}/usr/share/licenses/${_pkg}/"
 }
