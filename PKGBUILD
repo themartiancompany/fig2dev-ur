@@ -136,13 +136,22 @@ if [[ "${_transfig}" == "true" ]]; then
 fi
 _tag="${pkgver}"
 _tarname="${_pkg}-${_tag}"
+_3_2_9_sum='15e246c8d13cc72de25e08314038ad50ce7d2defa9cf1afc172fd7f5932090b1'
+_sum="61e185393176852f03b901b3b05b19fbc5ad8258ff142f3da6e70b1b83513326"
+_sig_sum="bdf8bb3460e9150a9ca0449f729052b279a3abfccfa53f61ad838fe48da7d876"
+# Dvorak
+_evmfs_ns="0x87003Bd6C074C713783df04f36517451fF34CBEf"
+_evmfs_network="100"
+_evmfs_address="0x69470b18f8b8b5f92b48f6199dcb147b4be96571"
+_evmfs_dir="evmfs://${_evmfs_network}/${_evmfs_address}/${_evmfs_ns}"
+_evmfs_uri="${_evmfs_dir}/${_sum}"
+_evmfs_src="${_tarfile}::${_evmfs_uri}"
+_sig_uri="${_evmfs_dir}/${_sig_sum}"
+_sig_src="${_tarfile}.sig::${_sig_uri}"
 source=(
   "https://downloads.sourceforge.net/mcj/${_tarname}.tar.xz"
   # "${_pkg}-3.2.9-remove_broken_tests.patch"
 )
-_3_2_9_sum='15e246c8d13cc72de25e08314038ad50ce7d2defa9cf1afc172fd7f5932090b1'
-_sum="61e185393176852f03b901b3b05b19fbc5ad8258ff142f3da6e70b1b83513326"
-_sig_sum="bdf8bb3460e9150a9ca0449f729052b279a3abfccfa53f61ad838fe48da7d876"
 sha256sums=(
   "${_sum}"
   # '32e1fe1d99c76db7d49cb46245442cdf0fce693c3ebcde7b47913ebafb0c72fa'
