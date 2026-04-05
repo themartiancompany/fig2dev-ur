@@ -81,7 +81,7 @@ if [[ ! -v "_evmfs" ]]; then
 fi
 if [[ ! -v "_transfig" ]]; then
   # See https://sourceforge.net/p/mcj/discussion/general/thread/4bae083308
-  _transfig="true"
+  _transfig="false"
 fi
 _pkg=fig2dev
 pkgbase="${_pkg}"
@@ -89,7 +89,7 @@ pkgname=(
   "${pkgbase}"
 )
 pkgver=3.2.9a
-pkgrel=2
+pkgrel=3
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
