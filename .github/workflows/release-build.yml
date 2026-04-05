@@ -2232,6 +2232,7 @@ jobs:
           Builds the Windows package.
         run: |
           mkdir \
+            -p \
             "/root/temp"
           cp \
             -r \
