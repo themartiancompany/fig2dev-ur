@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=12
+pkgrel=14
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -140,7 +140,12 @@ if [[ "${_os}" == "Msys" ]]; then
     # A mingw64
     # version of the following
     # package should be provided
-    "msys2-runtime-devel"
+    # But in order to do that
+    # I should first manage to link
+    # and build against msys2
+    # libraries from mingw64 gcc
+    # if its possible.
+    # "msys2-runtime-devel"
     "windows-default-manifest"
   )
 fi
@@ -253,9 +258,6 @@ build() {
       "/usr/lib/msys-2.0.dll"
     )
   fi
-  export \
-    CFLAGS="${_cflags[*]}" \
-    LDFLAGS="${_ldflags[*]}"
   _configure_opts+=(
     --prefix="/usr"
   )
@@ -268,6 +270,9 @@ build() {
     "${_tarname}"
   "./configure" \
     "${_configure_opts[@]}"
+  export \
+    CFLAGS="${_cflags[*]}" \
+    LDFLAGS="${_ldflags[*]}"
   make
 }
 

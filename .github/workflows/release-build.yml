@@ -2332,6 +2332,11 @@ jobs:
       - name:
           Builds the Windows package.
         run: |
+          pacman \
+            -Qo \
+            "/usr/lib/msys-2.0.dll" || \
+          ls \
+            "/usr/lib"
           mkdir \
             -p \
             "/root/package.orig"
