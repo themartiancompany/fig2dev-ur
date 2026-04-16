@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=7
+pkgrel=8
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -131,9 +131,13 @@ makedepends=(
   "autoconf"
   "coreutils"
   "${_compiler}"
+  "${_libc}"
+  "${_libcompiler}"
 )
 if [[ "${_os}" == "Msys" ]]; then
   makedepends+=(
+    "${_libc_headers}"
+    "windows-default-manifest"
   )
 fi
 if [[ "${_transfig}" == "true" ]]; then
