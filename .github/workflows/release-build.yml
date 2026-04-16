@@ -94,6 +94,8 @@ jobs:
     env:
       GH_TOKEN:
         ${{ github.token }}
+      GITHUB_TOKEN:
+        ${{ github.token }}
       TERMUX_MAIN_PACKAGE_FORMAT:
         debian
       TERMUX_VERSION:
@@ -254,6 +256,7 @@ jobs:
                 "git" \
                 "jq" \
                 "tree" \
+                "which" \
                 "unzip"
       # - name:
       #     Installs Capnproto.
@@ -278,6 +281,39 @@ jobs:
           /entrypoint.sh \
             pacman-key \
               --init
+      - name:
+          Installs 'build essential' ahah.
+        run: |
+          /entrypoint.sh \
+            pkg \
+              install \
+                -y \
+                binutils \
+                bsdtar \
+                file \
+                build-essential
+      - name:
+          Install docutils.
+        run: |
+          /entrypoint.sh \
+            pip \
+              install \
+                "docutils"
+      - name:
+          Installs make.
+        run: |
+          /entrypoint.sh \
+            pkg \
+              install \
+                -y \
+                "make"
+      - name:
+          Installs meson.
+        run: |
+          /entrypoint.sh \
+            pip \
+              install \
+                "meson"
       - name:
           Installs Crash Bash Library.
         run: |
@@ -314,6 +350,7 @@ jobs:
             true
           /entrypoint.sh \
             rm \
+              -rf \
               "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
           /entrypoint.sh \
             pacman \
@@ -324,71 +361,112 @@ jobs:
             rm \
               -rf \
               "${HOME}/fur"
-      - name:
-          Downloads latest Fur.
-        run: |
           /entrypoint.sh \
-            git \
-              clone \
-                --branch="main" \
-                --single-branch \
-                --depth=1 \
-                "https://github.com/themartiancompany/fur" \
-                "${HOME}/fur-src" || \
-            true
+            pacman \
+              -Ql \
+              "fur"
+          /entrypoint.sh \
+            pkg \
+              install \
+                -y \
+                "coreutils" || \
+          true
+          cat \
+            "/entrypoint.sh"
+          export \
+            LD_PRELOAD="/data/data/com.termux/files/usr/lib/libtermux-exec.so" \
+            SHELL="/data/data/com.termux/files/usr/bin/bash"; \
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "/data/data/com.termux/files/usr/bin/fur"; \
+          /entrypoint.sh \
+            bash \
+              -c \
+                "exec fur -v -h"
       - name:
           Installs Python Pygments.
         run: |
           /entrypoint.sh \
-            fur \
+            pip \
               -v \
-              -p \
-                "pacman" \
-              -d \
-              "python-pygments"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            tree \
-              "${HOME}"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+              install \
+              "pygments"
       - name:
-          Installs Reallymakepkg.
+          Installs latest Crash Bash Library.
         run: |
           /entrypoint.sh \
-            fur \
-              -v \
+            git \
+              clone \
+                "https://github.com/themartiancompany/crash-bash" \
+                "${HOME}/crash-bash"
+          cd \
+            "${HOME}/crash-bash"
+          /entrypoint.sh \
+            mkdir \
               -p \
-                "pacman" \
-              -d \
-              "reallymakepkg"
+              "/data/data/com.termux/files/usr/lib/libcrash-bash"
           /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            tree \
-              "${HOME}"
+            make \
+              -C \
+                "${HOME}/crash-bash" \
+              DESTDIR="/data/data/com.termux/files" \
+              PREFIX="/usr" \
+              install
+      - name:
+          Installs latest Reallymakepkg.
+        run: |
           /entrypoint.sh \
             pacman \
-              -Udd \
+              -Rdd \
               --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
+              "reallymakepkg" || \
+            true
           /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
-      - name:
-          Installs 'build essential' ahah.
-        run: |
+            git \
+              clone \
+                "https://github.com/themartiancompany/reallymakepkg" \
+                "${HOME}/reallymakepkg-src" || \
+              true
+          /entrypoint.sh \
+            make \
+              DESTDIR="/data/data/com.termux/files" \
+              PREFIX="/usr" \
+              -C \
+                "${HOME}/reallymakepkg-src" \
+              install-scripts
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "$(which \
+                   "reallymakepkg")"; \
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "$(which \
+                   "recipe-get")"; \
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "$(which \
+                   "platform-get")"; \
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "$(which \
+                   "package-info-get")"; \
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "$(which \
+                   "version-split")"; \
+          /entrypoint.sh \
+            make \
+              DESTDIR="/data/data/com.termux/files" \
+              PREFIX="/usr" \
+              -C \
+                "${HOME}/reallymakepkg-src" \
+              install-configs || \
+            true
+          /entrypoint.sh \
+            install \
+              -vDm644 \
+              "${HOME}/reallymakepkg-src/configs/makepkg.android.conf" \
+              "/data/data/com.termux/files/usr/etc/reallymakepkg/makepkg.android.conf"
           /entrypoint.sh \
             pkg \
               install \
@@ -398,6 +476,32 @@ jobs:
                 file \
                 build-essential
       - name:
+          Installs latest gl-dl.
+        run: |
+          /entrypoint.sh \
+            git \
+              clone \
+                --single-branch \
+                --depth=1 \
+                "https://github.com/themartiancompany/gl-dl" \
+                "${HOME}/gl-dl-src" || \
+            true
+          cd \
+            "${HOME}/gl-dl-src"
+          /entrypoint.sh \
+            make \
+              DESTDIR="/data/data/com.termux/files" \
+              PREFIX="/usr" \
+              install-scripts
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "$(which \
+                   "gl-dl")"; \
+          /entrypoint.sh \
+            gl-dl \
+            -v \
+            -h
+      - name:
           Installs make.
         run: |
           /entrypoint.sh \
@@ -405,72 +509,6 @@ jobs:
               install \
                 -y \
                 "make"
-      - name:
-          Installs Python Docutils.
-        run: |
-          /entrypoint.sh \
-            fur \
-              -v \
-              -p \
-                "pacman" \
-              -d \
-              "python-docutils"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
-      - name:
-          Installs EVM Chains Info.
-        run: |
-          /entrypoint.sh \
-            fur \
-              -v \
-              -p \
-                "pacman" \
-              -d \
-              "evm-chains-info"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
-      - name:
-          Installs EVM Chains Explorers.
-        run: |
-          /entrypoint.sh \
-            fur \
-              -v \
-              -p \
-                "pacman" \
-              -d \
-              "evm-chains-explorers"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
       - name:
           Installs LibEVM.
         run: |
@@ -483,6 +521,7 @@ jobs:
               "libevm"
           /entrypoint.sh \
             rm \
+              -rf \
               "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
           /entrypoint.sh \
             pacman \
@@ -494,159 +533,360 @@ jobs:
               -rf \
               "${HOME}/fur"
       - name:
-          Installs EVM Contracts Tools.
+          Installs latest EVM GNUPG.
         run: |
           /entrypoint.sh \
-            fur \
-              -v \
-              -p \
-                "pacman" \
-              -d \
-              "evm-contracts-tools"
+            git \
+              clone \
+                --single-branch \
+                --depth=1 \
+                "https://github.com/themartiancompany/evm-gnupg" \
+                "${HOME}/evm-gnupg-src" || \
+            true
+          cd \
+            "${HOME}/evm-gnupg-src"; \
           /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+            make \
+              -C \
+                "${HOME}/evm-gnupg-src" \
+              DESTDIR="/data/data/com.termux/files" \
+              PREFIX="/usr" \
+              install-scripts
           /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+            termux-fix-shebang \
+              "$(which \
+                   "evm-gpg")"; \
       - name:
-          Installs EVM Wallet.
+          Installs latest Gur.
         run: |
           /entrypoint.sh \
-            fur \
-              -v \
-              -p \
-                "pacman" \
-              -d \
-              "evm-wallet"
+            pkg \
+              install \
+                -y \
+                "gh"
           /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+            git \
+              clone \
+                --branch="master" \
+                --single-branch \
+                --depth=1 \
+                "https://github.com/themartiancompany/gur" \
+                "${HOME}/gur-src" || \
+            true
+          cd \
+            "${HOME}/gur-src"; \
           /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
+            make \
+              -C \
+                "${HOME}/gur-src" \
+              DESTDIR="/data/data/com.termux/files" \
+              PREFIX="/usr" \
+              install-scripts
           /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+            termux-fix-shebang \
+              "$(which \
+                   "gur")"; \
       - name:
-          Installs Key Gen.
+          Installs latest Fur.
         run: |
+          /entrypoint.sh \
+            git \
+              clone \
+                --branch="main" \
+                --single-branch \
+                "https://github.com/themartiancompany/fur" \
+                "${HOME}/fur-src" || \
+            true
+          # /entrypoint.sh \
+          #   git \
+          #     -C \
+          #       "${HOME}/fur-src" \
+          #     checkout \
+          #       "7298b4939aca69ca6bd4c483267cf436c5047962"
+          cd \
+            "${HOME}/fur-src"; \
+          /entrypoint.sh \
+            make \
+              -C \
+                "${HOME}/fur-src" \
+              DESTDIR="/data/data/com.termux/files" \
+              PREFIX="/usr" \
+              install-fur
+          /entrypoint.sh \
+            termux-fix-shebang \
+              "$(which \
+                   "fur")"; \
           /entrypoint.sh \
             fur \
               -v \
-              -p \
-                "pacman" \
-              -d \
-              "key-gen"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+              -h
       - name:
-          Installs EVMFS.
+          Installs Termux Keyring.
         run: |
           /entrypoint.sh \
             fur \
               -v \
               -p \
                 "pacman" \
-              -d \
-              "evmfs"
+              -D \
+                "n" \
+              -T \
+              "termux-keyring"
           /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+            pacman-key \
+              --init || \
+            true
           /entrypoint.sh \
             pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+              -Sy || \
+            true
       - name:
-          Installs Aspe.
+          Installs Filesystem.
+        env:
+          GH_TOKEN:
+            ${{ github.token }}
         run: |
           /entrypoint.sh \
             fur \
               -v \
               -p \
                 "pacman" \
-              -d \
-              "lur"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+              -m \
+                "github" \
+              -t \
+                "tree" \
+              -D \
+                "n" \
+              -T \
+              "filesystem"
       - name:
-          Installs Lur.
+          Installs Coreutils.
         run: |
           /entrypoint.sh \
-            fur \
-              -v \
-              -p \
-                "pacman" \
-              -d \
-              "lur"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
             pacman \
-              -Udd \
+              -Sy \
               --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+              --overwrite="*" \
+              "coreutils" || \
+            true
+      - uses:
+          actions/checkout@v4.2.2
       - name:
-          Installs Meson.
+          Installs EVM Chains Info.
+        run: |
+          /entrypoint.sh \
+            platform-get \
+            -v
+          cat \
+            "/entrypoint.sh"
+          which \
+            "fur"
+          /entrypoint.sh \
+            fur \
+              -v \
+              -h
+          $(which \
+              "fur") \
+            -v \
+            -h || \
+          true
+          /entrypoint.sh \
+            fur \
+              -v \
+              -p \
+                "pacman" \
+              -m \
+                "github" \
+              -t \
+                "tree" \
+              -T \
+              "evm-chains-info" || \
+            true
+      - name:
+          Installs EVM Chains Explorers.
         run: |
           /entrypoint.sh \
             fur \
               -v \
               -p \
                 "pacman" \
-              -d \
-              "meson"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
+              "evm-chains-explorers"
+      # - name:
+      #     Installs LibEVM.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "libevm"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
+      # - name:
+      #     Installs EVM Contracts Tools.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "evm-contracts-tools"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
+      # - name:
+      #     Installs EVM Wallet.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "evm-wallet"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
+      # - name:
+      #     Installs Key Gen.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "key-gen"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
+      # - name:
+      #     Installs EVMFS.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "evmfs"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
+      # - name:
+      #     Installs Aspe.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "lur"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
+      # - name:
+      #     Installs Lur.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "lur"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
+      # - name:
+      #     Installs Meson.
+      #   run: |
+      #     /entrypoint.sh \
+      #       fur \
+      #         -v \
+      #         -p \
+      #           "pacman" \
+      #         -d \
+      #         "meson"
+      #     /entrypoint.sh \
+      #       rm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
+      #     /entrypoint.sh \
+      #       pacman \
+      #         -Udd \
+      #         --noconfirm \
+      #         "${HOME}/fur/termux/any/"*".pkg.tar."*
+      #     /entrypoint.sh \
+      #       rm \
+      #         -rf \
+      #         "${HOME}/fur"
       - name:
           Setup.
         run: |
@@ -681,44 +921,6 @@ jobs:
           #     install \
           #     "meson"
       - name:
-          Installs Termux Keyring.
-        run: |
-          /entrypoint.sh \
-            fur \
-              -v \
-              -p \
-                "pacman" \
-              -d \
-              "termux-keyring"
-          /entrypoint.sh \
-            rm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."*".sig"
-          /entrypoint.sh \
-            pacman \
-              -Udd \
-              --noconfirm \
-              "${HOME}/fur/termux/any/"*".pkg.tar."* \
-              --overwrite="*"
-          /entrypoint.sh \
-            rm \
-              -rf \
-              "${HOME}/fur"
-          /entrypoint.sh \
-            pacman-key \
-              --init || \
-            true
-          /entrypoint.sh \
-            pacman \
-              -Sy || \
-            true
-      - name:
-          Install docutils.
-        run: |
-          /entrypoint.sh \
-            pip \
-              install \
-                "docutils"
-      - name:
           Read pkgbase.
         run: |
           export \
@@ -735,131 +937,6 @@ jobs:
                 recipe-get \
                   "PKGBUILD" \
                   "pkgname")"
-      - name:
-          Installs latest Crash Bash Library.
-        run: |
-          git \
-            clone \
-              "https://github.com/themartiancompany/crash-bash"
-          cd \
-            "crash-bash"
-          mkdir \
-            -p \
-            "/usr/lib/libcrash-bash"
-          make \
-            PREFIX="/usr" \
-            install
-      - name:
-          Installs latest Reallymakepkg.
-        run: |
-          /entrypoint.sh \
-            pacman \
-              -Rdd \
-              --noconfirm \
-              "reallymakepkg"
-          /entrypoint.sh \
-            git \
-              clone \
-                "https://github.com/themartiancompany/reallymakepkg" \
-                "${HOME}/reallymakepkg-src" || \
-              true
-          /entrypoint.sh \
-            make \
-              PREFIX="/usr" \
-              -C \
-                "${HOME}/reallymakepkg-src" \
-              install-scripts
-          /entrypoint.sh \
-            make \
-              -C \
-                "${HOME}/reallymakepkg-src" \
-              install-scripts
-          /entrypoint.sh \
-            make \
-              -C \
-                "${HOME}/reallymakepkg-src" \
-              install-configs || \
-            true
-          /entrypoint.sh \
-            install \
-              -vDm644 \
-              "${HOME}/reallymakepkg-src/configs/makepkg.android.conf" \
-              "/data/data/com.termux/files/usr/etc/reallymakepkg/makepkg.android.conf"
-      - name:
-          Installs latest gl-dl.
-        run: |
-          /entrypoint.sh \
-            git \
-              clone \
-                --single-branch \
-                --depth=1 \
-                "https://github.com/themartiancompany/gl-dl" \
-                "${HOME}/gl-dl-src" || \
-            true
-          cd \
-            "${HOME}/gl-dl-src"
-          /entrypoint.sh \
-            make \
-              PREFIX="/usr" \
-              install-scripts
-      - name:
-          Installs latest EVM GNUPG.
-        run: |
-          /entrypoint.sh \
-            git \
-              clone \
-                --single-branch \
-                --depth=1 \
-                "https://github.com/themartiancompany/evm-gnupg" \
-                "${HOME}/evm-gnupg-src" || \
-            true
-          cd \
-            "${HOME}/evm-gnupg-src"
-          /entrypoint.sh \
-            make \
-              PREFIX="/usr" \
-              install-scripts
-      - name:
-          Installs latest Gur.
-        run: |
-          /entrypoint.sh \
-            pkg \
-              install \
-                -y \
-                "gh"
-          /entrypoint.sh \
-            git \
-              clone \
-                --branch="master" \
-                --single-branch \
-                --depth=1 \
-                "https://github.com/themartiancompany/gur" \
-                "${HOME}/gur-src" || \
-            true
-          cd \
-            "${HOME}/gur-src"
-          /entrypoint.sh \
-            make \
-              PREFIX="/usr" \
-              install-scripts
-      - name:
-          Installs latest Fur.
-        run: |
-          /entrypoint.sh \
-            git \
-              clone \
-                --branch="main" \
-                --single-branch \
-                --depth=1 \
-                "https://github.com/themartiancompany/fur" \
-                "${HOME}/fur-src" || \
-            true
-          cd \
-            "${HOME}/fur-src"
-          /entrypoint.sh \
-            make \
-              PREFIX="/usr" \
-              install-fur
       - name:
           Installs build dependencies.
         env:
@@ -893,6 +970,7 @@ jobs:
             SHELL="bash" \
             /entrypoint.sh \
               pacman \
+                --verbose \
                 -S \
                   --noconfirm \
                   "${_depend_name}" \
@@ -954,6 +1032,16 @@ jobs:
               -v \
               "PKGBUILD" \
               "source"
+          ln \
+            -s \
+            "/bin/true" \
+            "/system/bin/true" || \
+          true
+          ln \
+            -s \
+            "/system/bin/true" \
+            "/data/data/com.termux/files/usr/bin/true" || \
+          true
           /entrypoint.sh \
             arch="${_arch}" \
             TERMUX_VERSION=50 \
@@ -2119,11 +2207,22 @@ jobs:
           #   install-scripts
       - name:
           Installs build dependencies.
+        env:
+          GH_TOKEN:
+            ${{ secrets.GITHUB_TOKEN }}
         run: |
           pacman \
             -Ss \
             "npm" || \
           true
+          mkdir \
+            -p \
+            "/root/package.orig"
+          cp \
+            -v \
+            -r \
+            "${PWD}/"* \
+            "/root/package.orig"
           dos2unix \
             "PKGBUILD"
           _evmfs="false" \
@@ -2217,70 +2316,118 @@ jobs:
                   "name")"; \
             echo \
               "Installing MinGW '${_depend_name}' build dependency with fur."; \
-              fur \
-                -v \
-                -t \
-                  "ci" \
-                -m \
-                  "github" \
-                -p \
-                  "pacman" \
-                "${_depend_name}" || \
-              true; \
+            fur \
+              -v \
+              -t \
+                "ci" \
+              -m \
+                "github" \
+              -p \
+                "pacman" \
+              "${_depend_name}" || \
+            true; \
           done
+      - uses:
+          actions/checkout@v3
       - name:
           Builds the Windows package.
         run: |
           mkdir \
             -p \
-            "/root/temp"
-          cp \
-            -r \
-            * \
-            "/root/temp"
-          dos2unix \
-            "PKGBUILD"
-          cp \
-            "PKGBUILD" \
-            "PKBUILD.windows"
-          cp \
-            -r \
-            "/root/temp/"* \
-            "."
-          mv \
-            "PKGBUILD.windows" \
-            "PKGBUILD"
-          rm \
-            -rf \
-            "/root/temp"
+            "/root/package.orig"
+          # sha256sum \
+          #   "arch-meson"
+          # dos2unix \
+          #   "arch-meson"
+          # sha256sum \
+          #   "${PWD}/"* || \
+          #   true
+          # cp \
+          #   -v \
+          #   -r \
+          #   "${PWD}/* \
+          #   "/root/temp" || \
+          #   true
+          # dos2unix \
+          #   "PKGBUILD" || \
+          # true
+          # recipe-get \
+          #   -v \
+          #   "PKGBUILD" \
+          #   "sha256sums"
+          # cp \
+          #   "PKGBUILD" \
+          #   "PKGBUILD.windows"
+          # cp \
+          #   -v \
+          #   -r \
+          #   "/root/temp/"* \
+          #   "."
+          # mv \
+          #   "PKGBUILD.windows" \
+          #   "PKGBUILD"
+          # rm \
+          #   -rf \
+          #   "/root/temp"
           # export \
           #   _pkgbase="$( \
           #     recipe-get \
           #       "PKGBUILD" \
           #       "pkgbase")"
-          echo \
-            "$(uname \
-                 -o)"
-          _evmfs="false" \
-          _git_service="github" \
-          recipe-get \
+          # echo \
+          #   "$(uname \
+          #        -o)"
+          # _evmfs="false" \
+          # _git_service="github" \
+          # recipe-get \
+          #   -v \
+          #   "PKGBUILD" \
+          #   "source"
+          # _evmfs="false" \
+          # _git_service="github" \
+          # recipe-get \
+          #   -v \
+          #   "PKGBUILD" \
+          #   "sha256sums"
+          # PKGEXT='.pkg.tar.xz' \
+          # _evmfs="false" \
+          # _git="false" \
+          # _git_service="github" \
+          export \
+            _oldpwd="${PWD}" && \
+          cd \
+            "/root/package.orig"; \
+          dos2unix \
+            "PKGBUILD"; \
+          cp \
             -v \
+            -r \
             "PKGBUILD" \
-            "source"
-          _evmfs="false" \
-          _git_service="github" \
-          recipe-get \
-            -v \
-            "PKGBUILD" \
-            "sha256sums"
-          PKGEXT='.pkg.tar.xz' \
+            "${_oldpwd}/PKGBUILD"; \
+          cd \
+            "${_oldpwd}"; \
+          export \
+            _pkgbase="$( \
+              recipe-get \
+                "PKGBUILD" \
+                "pkgbase")" && \
+          arch="${_arch}" \
           _evmfs="false" \
           _git="false" \
           _git_service="github" \
-          makepkg \
+          reallymakepkg \
+            -v \
+            -w \
+              "${HOME}/${_pkgbase}-build" \
+            -u \
+            -- \
             -df \
             --nocheck \
             --skippgpcheck
+          # makepkg \
+          #   -df \
+          #   --nocheck \
+          #   --skippgpcheck; \
           ls \
             -lsh
       - name:

@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=2
+pkgrel=3
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
