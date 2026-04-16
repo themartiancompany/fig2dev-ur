@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=5
+pkgrel=6
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -127,7 +127,8 @@ depends=(
   'zlib'
 )
 makedepends=(
-  "automake"
+  # "automake"
+  "autoconf"
   "coreutils"
   "${_compiler}"
 )
