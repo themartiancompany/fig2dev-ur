@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=17
+pkgrel=18
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -276,7 +276,9 @@ build() {
     CFLAGS="${_cflags[*]}" \
     LDFLAGS="${_ldflags[*]}"
   "./configure" \
-    "${_configure_opts[@]}"
+    "${_configure_opts[@]}" || \
+    cat \
+      "config.log"
   make
 }
 
