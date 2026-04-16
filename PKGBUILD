@@ -162,7 +162,7 @@ _evmfs_src="${_tarfile}::${_evmfs_uri}"
 _sig_uri="${_evmfs_dir}/${_sig_sum}"
 _sig_src="${_tarfile}.sig::${_sig_uri}"
 source=(
-  "https://downloads.sourceforge.net/mcj/${_tarfile}"
+  "${_tarfile}::https://downloads.sourceforge.net/mcj/${_tarfile}"
   # "${_pkg}-3.2.9-remove_broken_tests.patch"
 )
 sha256sums=(
