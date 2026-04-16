@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=11
+pkgrel=12
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -234,6 +234,7 @@ build() {
   local \
     _configure_opts=() \
     _cflags=() \
+    _ldflags=() \
     _os
   _os="$(
     uname \
@@ -241,13 +242,20 @@ build() {
   _cflags+=(
     $CFLAGS
   )
+  _ldflags+=(
+    $LDFLAGS
+  )
   if [[ "${_os}" == "Msys" ]]; then
     _cflags+=(
       -include "/usr/include/sys/wait.h"
     )
-  export \
-    CFLAGS="${_cflags[*]}"
+    _ldflags+=(
+      "/usr/lib/msys-2.0.dll"
+    )
   fi
+  export \
+    CFLAGS="${_cflags[*]}" \
+    LDFLAGS="${_ldflags[*]}"
   _configure_opts+=(
     --prefix="/usr"
   )
