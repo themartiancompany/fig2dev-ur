@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=14
+pkgrel=16
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -252,10 +252,14 @@ build() {
   )
   if [[ "${_os}" == "Msys" ]]; then
     _cflags+=(
-      -include "/usr/include/sys/wait.h"
+      -I"/mingw64/usr/include"
+      -I"/usr/include/sys"
+      # -include "/usr/include/sys/wait.h"
     )
     _ldflags+=(
-      "/usr/lib/msys-2.0.dll"
+      -L"/mingw64/usr/lib"
+      -L"/usr/lib"
+      # "/usr/lib/msys-2.0.dll"
     )
   fi
   _configure_opts+=(
