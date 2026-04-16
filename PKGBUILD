@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=3
+pkgrel=4
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -161,8 +161,22 @@ _evmfs_uri="${_evmfs_dir}/${_sum}"
 _evmfs_src="${_tarfile}::${_evmfs_uri}"
 _sig_uri="${_evmfs_dir}/${_sig_sum}"
 _sig_src="${_tarfile}.sig::${_sig_uri}"
-source=(
-  "${_tarfile}::https://downloads.sourceforge.net/mcj/${_tarfile}"
+source=()
+sha256sums=()
+if [[ "${_evmfs}" == "true" ]]; then
+  _src="${_evmfs_src}"
+  source+=(
+    "${_sig_src}"
+  )
+  sha256sums+=(
+    "${_sig_sum}"
+  )
+elif [[ "${_evmfs}" == "false" ]]; then
+  _uri="https://downloads.sourceforge.net/mcj/${_tarfile}"
+  _src="${_tarfile}::${_uri}"
+fi
+source+=(
+  "${_src}"
   # "${_pkg}-3.2.9-remove_broken_tests.patch"
 )
 sha256sums=(
