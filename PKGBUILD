@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=8
+pkgrel=9
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -137,6 +137,10 @@ makedepends=(
 if [[ "${_os}" == "Msys" ]]; then
   makedepends+=(
     "${_libc_headers}"
+    # A mingw64
+    # version of the following
+    # package should be provided
+    "msys2-runtime-devel"
     "windows-default-manifest"
   )
 fi
@@ -228,7 +232,20 @@ prepare() {
 
 build() {
   local \
-    _configure_opts=()
+    _configure_opts=() \
+    _cflags=() \
+    _os
+  _os="$(
+    uname \
+      -o)"
+  _cflags+=(
+    $CFLAGS
+  )
+  if [[ "${_os}" == "Msys" ]]; then
+    _cflags+=(
+      -I"/usr/include/sys/wait.h"
+    )
+  fi
   _configure_opts+=(
     --prefix="/usr"
   )
