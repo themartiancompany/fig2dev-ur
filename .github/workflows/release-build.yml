@@ -2332,9 +2332,12 @@ jobs:
       - name:
           Builds the Windows package.
         run: |
+          # No package seems to own msys-2.0.dll
+          # cool, why?
           pacman \
             -Qo \
-            "/usr/lib/msys-2.0.dll" || \
+            "/usr/lib/msys-2.0.dll.a" || \
+            true
           ls \
             "/usr/lib"
           mkdir \

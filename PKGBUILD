@@ -99,7 +99,7 @@ pkgname=(
 )
 _pkgver="3.2.9a"
 pkgver="3.2.9.1"
-pkgrel=16
+pkgrel=17
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -272,11 +272,11 @@ build() {
   fi
   cd \
     "${_tarname}"
-  "./configure" \
-    "${_configure_opts[@]}"
   export \
     CFLAGS="${_cflags[*]}" \
     LDFLAGS="${_ldflags[*]}"
+  "./configure" \
+    "${_configure_opts[@]}"
   make
 }
 
