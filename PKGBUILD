@@ -83,13 +83,23 @@ if [[ ! -v "_transfig" ]]; then
   # See https://sourceforge.net/p/mcj/discussion/general/thread/4bae083308
   _transfig="false"
 fi
+if [[ ! -v "_tag_name" ]]; then
+  _tag_name="pkgver"
+fi
+if [[ ! -v "_archive_format" ]]; then
+  _archive_format="tar.xz"
+  if [[ "${_tag_name}" == "pkgver" ]]; then
+    _archive_format="tar.xz"
+  fi
+fi
 _pkg=fig2dev
 pkgbase="${_pkg}"
 pkgname=(
   "${pkgbase}"
 )
-pkgver=3.2.9a
-pkgrel=4
+_pkgver="3.2.9a"
+pkgver="3.2.9.1"
+pkgrel=2
 pkgdesc="Format conversion utility that can be used with xfig"
 arch=(
   'aarch64'
@@ -134,8 +144,11 @@ if [[ "${_transfig}" == "true" ]]; then
     'transfig'
   )
 fi
-_tag="${pkgver}"
+if [[ "${_tag_name}" == "pkgver" ]]; then
+  _tag="${_pkgver}"
+fi
 _tarname="${_pkg}-${_tag}"
+_tarfile="${_tarname}.${_archive_format}"
 _3_2_9_sum='15e246c8d13cc72de25e08314038ad50ce7d2defa9cf1afc172fd7f5932090b1'
 _sum="61e185393176852f03b901b3b05b19fbc5ad8258ff142f3da6e70b1b83513326"
 _sig_sum="bdf8bb3460e9150a9ca0449f729052b279a3abfccfa53f61ad838fe48da7d876"
@@ -149,7 +162,7 @@ _evmfs_src="${_tarfile}::${_evmfs_uri}"
 _sig_uri="${_evmfs_dir}/${_sig_sum}"
 _sig_src="${_tarfile}.sig::${_sig_uri}"
 source=(
-  "https://downloads.sourceforge.net/mcj/${_tarname}.tar.xz"
+  "https://downloads.sourceforge.net/mcj/${_tarfile}"
   # "${_pkg}-3.2.9-remove_broken_tests.patch"
 )
 sha256sums=(
